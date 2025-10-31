@@ -5,13 +5,30 @@ import random
 # -----------------------------
 # Streamlit UI Setup
 # -----------------------------
-st.title("Genetic Algorithm – Program Scheduling")
+st.title("🧬 Genetic Algorithm – Program Scheduling")
 
 st.markdown("""
-This app allows you to configure the **Genetic Algorithm parameters** and view the resulting **optimized schedule**.
+This app allows you to configure the **Genetic Algorithm parameters**
+and view the resulting **optimized schedule** using your uploaded dataset.
 """)
 
-# --- Parameter Inputs ---
+# -----------------------------
+# Upload CSV File
+# -----------------------------
+st.sidebar.header("📁 Upload Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=["csv"])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.success("✅ Dataset uploaded successfully!")
+    st.dataframe(df.head(), use_container_width=True)
+else:
+    st.warning("⚠️ Please upload a CSV file to begin.")
+    st.stop()  # Stop the app here until file is uploaded
+
+# -----------------------------
+# GA Parameter Inputs
+# -----------------------------
 st.sidebar.header("⚙️ GA Parameter Settings")
 
 co_r = st.sidebar.slider(
@@ -37,35 +54,45 @@ st.sidebar.markdown(f"**Selected Parameters:**\n\n- CO_R: `{co_r}`\n- MUT_R: `{m
 # -----------------------------
 # Simulate a Genetic Algorithm (Mock Example)
 # -----------------------------
-def run_genetic_algorithm(co_r, mut_r):
+def run_genetic_algorithm(df, co_r, mut_r):
     """
-    Simulate running a GA for scheduling.
-    In a real case, this would call your GA optimizer.
+    Simulate a GA schedule optimization using uploaded dataset.
+    Assumes dataset has a column 'Program' or similar.
     """
-    programs = ["Wildlife Documentary", "News", "Kids Show", "Sports Live", "Cooking Show", "Drama Series"]
+
+    # Detect program column automatically
+    if "Program" in df.columns:
+        programs = df["Program"].dropna().tolist()
+    else:
+        programs = df.columns.tolist()  # fallback if no 'Program' column
+
+    # Define 6 time slots (example)
     time_slots = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM"]
 
-    # Shuffle to simulate GA optimization result
+    # Randomize program order based on parameters to simulate GA output
     random.seed(int(co_r * 1000 + mut_r * 10000))
     random.shuffle(programs)
 
+    # Limit programs to time slots count
     schedule = pd.DataFrame({
         "Time Slot": time_slots,
-        "Program": programs
+        "Program": programs[:len(time_slots)]
     })
+
     return schedule
 
-# --- Run Button ---
-if st.button("Run Genetic Algorithm"):
-    st.success(f"✅ Genetic Algorithm executed with CO_R={co_r} and MUT_R={mut_r}")
+# -----------------------------
+# Run GA Button
+# -----------------------------
+if st.button("🚀 Run Genetic Algorithm"):
+    st.success(f"✅ GA executed with CO_R={co_r}, MUT_R={mut_r}")
 
-    # Get schedule result
-    schedule_df = run_genetic_algorithm(co_r, mut_r)
+    schedule_df = run_genetic_algorithm(df, co_r, mut_r)
 
     st.subheader("📅 Optimized Program Schedule")
     st.dataframe(schedule_df, use_container_width=True)
 
-    # Optionally export
+    # Download option
     csv = schedule_df.to_csv(index=False).encode("utf-8")
     st.download_button(
         "⬇️ Download Schedule as CSV",
@@ -73,5 +100,6 @@ if st.button("Run Genetic Algorithm"):
         file_name="optimized_schedule.csv",
         mime="text/csv"
     )
+
 else:
-    st.info("Adjust parameters in the sidebar and click **Run Genetic Algorithm** to generate a schedule.")
+    st.info("Adjust parameters and click **Run Genetic Algorithm** to generate a schedule.")
