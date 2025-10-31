@@ -5,7 +5,7 @@ import random
 # -----------------------------
 # Helper: Mock GA Function
 # -----------------------------
-df = pd.read_csv("program_ratings.csv")
+df = pd.read_csv("program_ratings_increased.csv")
 st.dataframe(df)
 
 # -----------------------------
