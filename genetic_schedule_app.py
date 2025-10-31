@@ -57,26 +57,21 @@ st.sidebar.markdown(f"**Selected Parameters:**\n\n- CO_R: `{co_r}`\n- MUT_R: `{m
 def run_genetic_algorithm(df, co_r, mut_r):
     """
     Simulate a GA schedule optimization using the uploaded dataset.
-    Detects program names and uses existing time slots from dataset if available.
+    Detects program names and uses the dataset's time slot headers (e.g., Hour 6, Hour 7...).
     """
 
-    # --- Detect Program Column ---
+    # --- Detect program name column ---
     program_col = None
     for col in df.columns:
         if "program" in col.lower() or "name" in col.lower() or "title" in col.lower():
             program_col = col
             break
 
-    # Fallback: use first non-numeric column
-    if program_col is None:
-        for col in df.columns:
-            if df[col].dtype == "object":
-                program_col = col
-                break
-
+    # If not found, assume first column holds program names
     if program_col is None:
         program_col = df.columns[0]
 
+    # --- Extract program list ---
     programs = (
         df[program_col]
         .dropna()
@@ -85,38 +80,28 @@ def run_genetic_algorithm(df, co_r, mut_r):
         .tolist()
     )
 
-    # --- Detect Time Slot Column ---
-    time_col = None
-    for col in df.columns:
-        if any(keyword in col.lower() for keyword in ["time", "slot", "schedule"]):
-            time_col = col
-            break
+    # --- Detect time slot columns automatically ---
+    # Example: columns like "Hour 6", "Hour 7", etc.
+    time_slots = [
+        col for col in df.columns
+        if "hour" in col.lower() or "time" in col.lower()
+    ]
 
-    if time_col is not None:
-        # Use time slots from dataset
-        time_slots = (
-            df[time_col]
-            .dropna()
-            .drop_duplicates()
-            .astype(str)
-            .tolist()
-        )
-    else:
-        # If no time column, generate artificial slots equal to number of programs
-        time_slots = [f"Slot {i+1}" for i in range(len(programs))]
+    # Fallback if no explicit hour columns are found
+    if not time_slots:
+        time_slots = [f"Hour {i+1}" for i in range(min(6, len(programs)))]
 
-    # --- Simulate GA scheduling ---
+    # --- Simulate GA schedule by randomizing ---
     random.seed(int(co_r * 1000 + mut_r * 10000))
     random.shuffle(programs)
 
-    # Limit to match available time slots
+    # --- Match programs to available time slots ---
     schedule = pd.DataFrame({
         "Time Slot": time_slots[:len(programs)],
         "Program": programs[:len(time_slots)]
     })
 
     return schedule
-
 
 
 # -----------------------------
