@@ -56,30 +56,60 @@ st.sidebar.markdown(f"**Selected Parameters:**\n\n- CO_R: `{co_r}`\n- MUT_R: `{m
 # -----------------------------
 def run_genetic_algorithm(df, co_r, mut_r):
     """
-    Simulate a GA schedule optimization using uploaded dataset.
-    Assumes dataset has a column 'Program' or similar.
+    Simulate a GA schedule optimization using the uploaded dataset.
+    Detects the correct column for program names and avoids numeric-only rows.
     """
 
-    # Detect program column automatically
-    if "Program" in df.rows:
-        programs = df["Program"].dropna().tolist()
-    else:
-        programs = df.rows.tolist()  # fallback if no 'Program' column
+    # --- Detect program column ---
+    # Prefer 'Program' or similar name
+    program_col = None
+    for col in df.columns:
+        if "program" in col.lower() or "name" in col.lower() or "title" in col.lower():
+            program_col = col
+            break
 
-    # Define 6 time slots (example)
-    time_slots = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM"]
+    # If no 'Program' column found, use the first non-numeric column
+    if program_col is None:
+        for col in df.columns:
+            if df[col].dtype == "object":
+                program_col = col
+                break
 
-    # Randomize program order based on parameters to simulate GA output
+    # If still none, assume the first column contains program names
+    if program_col is None:
+        program_col = df.columns[0]
+
+    # Extract program names, drop blanks and duplicates
+    programs = (
+        df[program_col]
+        .dropna()
+        .drop_duplicates()
+        .astype(str)
+        .tolist()
+    )
+
+    # If somehow it's still numeric, fallback to column headers
+    if all(p.replace('.', '', 1).isdigit() for p in programs):
+        programs = df.columns.tolist()
+
+    # --- Define time slots (example) ---
+    time_slots = [
+        "08:00 AM", "09:00 AM", "10:00 AM",
+        "11:00 AM", "12:00 PM", "01:00 PM"
+    ]
+
+    # --- Simulate GA scheduling ---
     random.seed(int(co_r * 1000 + mut_r * 10000))
     random.shuffle(programs)
 
-    # Limit programs to time slots count
+    # Limit to available slots
     schedule = pd.DataFrame({
         "Time Slot": time_slots,
         "Program": programs[:len(time_slots)]
     })
 
     return schedule
+
 
 # -----------------------------
 # Run GA Button
