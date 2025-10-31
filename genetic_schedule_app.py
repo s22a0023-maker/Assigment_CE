@@ -61,10 +61,10 @@ def run_genetic_algorithm(df, co_r, mut_r):
     """
 
     # Detect program column automatically
-    if "Program" in df.columns:
+    if "Program" in df.rows:
         programs = df["Program"].dropna().tolist()
     else:
-        programs = df.columns.tolist()  # fallback if no 'Program' column
+        programs = df.rows.tolist()  # fallback if no 'Program' column
 
     # Define 6 time slots (example)
     time_slots = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM"]
