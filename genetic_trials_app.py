@@ -5,22 +5,8 @@ import random
 # -----------------------------
 # Helper: Mock GA Function
 # -----------------------------
-def run_genetic_algorithm(co_r, mut_r):
-    """
-    Simulated Genetic Algorithm that generates a random schedule.
-    Replace this with your real GA logic.
-    """
-    programs = ["Wildlife Documentary", "News", "Kids Show", "Sports Live", "Cooking Show", "Drama Series"]
-    time_slots = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM"]
-
-    random.seed(int(co_r * 1000 + mut_r * 10000))  # deterministic shuffle per parameter pair
-    random.shuffle(programs)
-
-    schedule = pd.DataFrame({
-        "Time Slot": time_slots,
-        "Program": programs
-    })
-    return schedule
+df = pd.read_csv("program_ratings.csv")
+st.dataframe(df)
 
 # -----------------------------
 # Streamlit Interface
