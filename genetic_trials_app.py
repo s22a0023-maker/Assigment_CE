@@ -3,95 +3,116 @@ import pandas as pd
 import random
 
 # -----------------------------
-# Load Dataset
+# Streamlit UI Setup
 # -----------------------------
-st.title("🧬 Genetic Algorithm Scheduling – Multiple Trials")
+st.title("🧬 Genetic Algorithm – Multiple Trials for Program Scheduling")
 
-# Load the dataset (must be in the same folder or accessible via URL)
-try:
-    df = pd.read_csv("program_ratings_increased.csv")
-    st.subheader("📄 Loaded Dataset: program_ratings_increased.csv")
-    st.dataframe(df, use_container_width=True)
-except FileNotFoundError:
-    st.error("❌ CSV file 'program_ratings_increased.csv' not found. Please ensure it is in the same directory.")
+st.markdown("""
+This app lets you **run the Genetic Algorithm three times**  
+with different crossover and mutation rates.  
+Each trial will produce a unique optimized schedule.
+""")
+
+# -----------------------------
+# Upload CSV File
+# -----------------------------
+st.sidebar.header("📁 Upload Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=["csv"])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.success("✅ Dataset uploaded successfully!")
+    st.dataframe(df.head(), use_container_width=True)
+else:
+    st.warning("⚠️ Please upload a CSV file to begin.")
     st.stop()
 
 # -----------------------------
-# Helper: Mock Genetic Algorithm Function
+# GA Parameter Inputs (Three Trials)
 # -----------------------------
-def run_genetic_algorithm(co_r, mut_r):
-    """
-    Simulated Genetic Algorithm that generates a random schedule.
-    Replace this with your actual GA scheduling logic if available.
-    """
-    programs = df.sample(n=min(6, len(df)), random_state=int(co_r * 1000 + mut_r * 10000))["Program"].tolist() \
-        if "Program" in df.columns else \
-        ["Wildlife Documentary", "News", "Kids Show", "Sports Live", "Cooking Show", "Drama Series"]
+st.sidebar.header("⚙️ GA Parameter Settings – Multiple Trials")
 
-    time_slots = ["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM"]
-
-    # Shuffle to simulate GA optimization result
-    random.seed(int(co_r * 1000 + mut_r * 10000))
-    random.shuffle(programs)
-
-    schedule = pd.DataFrame({
-        "Time Slot": time_slots,
-        "Program": programs
-    })
-    return schedule
-
-# -----------------------------
-# Sidebar Parameters
-# -----------------------------
-st.markdown("""
-This interface lets you **experiment with three different parameter combinations**
-for the Genetic Algorithm.  
-Each trial will produce a separate optimized schedule.
-""")
-
-st.sidebar.header("⚙️ Genetic Algorithm Parameters")
-
-# --- TRIAL 1 ---
+# Trial 1
 st.sidebar.subheader("Trial 1 Parameters")
 co_r1 = st.sidebar.slider("CO_R (Trial 1)", 0.0, 0.95, 0.8, 0.01)
 mut_r1 = st.sidebar.slider("MUT_R (Trial 1)", 0.01, 0.05, 0.02, 0.01)
 
-# --- TRIAL 2 ---
+# Trial 2
 st.sidebar.subheader("Trial 2 Parameters")
 co_r2 = st.sidebar.slider("CO_R (Trial 2)", 0.0, 0.95, 0.7, 0.01)
 mut_r2 = st.sidebar.slider("MUT_R (Trial 2)", 0.01, 0.05, 0.03, 0.01)
 
-# --- TRIAL 3 ---
+# Trial 3
 st.sidebar.subheader("Trial 3 Parameters")
 co_r3 = st.sidebar.slider("CO_R (Trial 3)", 0.0, 0.95, 0.9, 0.01)
 mut_r3 = st.sidebar.slider("MUT_R (Trial 3)", 0.01, 0.05, 0.04, 0.01)
 
 # -----------------------------
-# Run Trials
+# GA Simulation Function
+# -----------------------------
+def run_genetic_algorithm(df, co_r, mut_r):
+    """
+    Simulate GA schedule optimization using the uploaded dataset.
+    Detects program names and uses dataset's time slot headers (e.g., Hour 6, Hour 7...).
+    """
+
+    # --- Detect program name column ---
+    program_col = None
+    for col in df.columns:
+        if "program" in col.lower() or "name" in col.lower() or "title" in col.lower():
+            program_col = col
+            break
+    if program_col is None:
+        program_col = df.columns[0]
+
+    # --- Extract program list ---
+    programs = (
+        df[program_col]
+        .dropna()
+        .drop_duplicates()
+        .astype(str)
+        .tolist()
+    )
+
+    # --- Detect time slot columns ---
+    time_slots = [col for col in df.columns if "hour" in col.lower() or "time" in col.lower()]
+    if not time_slots:
+        time_slots = [f"Hour {i+1}" for i in range(min(6, len(programs)))]
+
+    # --- Simulate GA scheduling ---
+    random.seed(int(co_r * 1000 + mut_r * 10000))
+    random.shuffle(programs)
+
+    schedule = pd.DataFrame({
+        "Time Slot": time_slots[:len(programs)],
+        "Program": programs[:len(time_slots)]
+    })
+
+    return schedule
+
+# -----------------------------
+# Run Button – All Three Trials
 # -----------------------------
 if st.button("🚀 Run All Three Trials"):
     st.success("✅ Genetic Algorithm executed for all three trials!")
 
-    # Store trial configurations
     trials = {
         "Trial 1": (co_r1, mut_r1),
         "Trial 2": (co_r2, mut_r2),
         "Trial 3": (co_r3, mut_r3)
     }
 
-    # Run and display results
+    # Loop through each trial
     for trial_name, (co_r, mut_r) in trials.items():
         st.subheader(f"📋 {trial_name}")
-        st.write(f"**Crossover Rate (CO_R):** `{co_r}`")
-        st.write(f"**Mutation Rate (MUT_R):** `{mut_r}`")
+        st.write(f"**Crossover Rate (CO_R):** {co_r}")
+        st.write(f"**Mutation Rate (MUT_R):** {mut_r}")
 
-        # Run the (mock) GA
-        schedule_df = run_genetic_algorithm(co_r, mut_r)
+        schedule_df = run_genetic_algorithm(df, co_r, mut_r)
 
-        # Display schedule
         st.dataframe(schedule_df, use_container_width=True)
 
-        # Optional: Download schedule
+        # Download button for each schedule
         csv = schedule_df.to_csv(index=False).encode("utf-8")
         st.download_button(
             f"⬇️ Download {trial_name} Schedule as CSV",
@@ -101,4 +122,4 @@ if st.button("🚀 Run All Three Trials"):
         )
 
 else:
-    st.info("Set your parameters in the sidebar and click **Run All Three Trials** to generate schedules.")
+    st.info("Adjust parameters for each trial and click **Run All Three Trials** to generate schedules.")
