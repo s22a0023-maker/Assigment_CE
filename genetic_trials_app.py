@@ -14,18 +14,18 @@ Each trial will produce a unique optimized schedule.
 """)
 
 # -----------------------------
-# Load Dataset from GitHub
+# Load Dataset from Local File Path
 # -----------------------------
-# 👉 Replace this link with your own GitHub raw CSV link
-github_csv_url = "https://github.com/s22a0023-maker/Assigment_CE/blob/main/program_ratings.csv"
+# 👉 Replace this path with the actual location of your dataset
+file_path = "program_ratings.csv"
 
 try:
-    df = pd.read_csv(github_csv_url)
-    st.success("✅ Dataset loaded successfully from GitHub!")
+    df = pd.read_csv(file_path)
+    st.success(f"✅ Dataset loaded successfully from local path:\n{file_path}")
     st.dataframe(df.head(), use_container_width=True)
 except Exception as e:
-    st.error(f"❌ Failed to load dataset from GitHub. Please check the URL.\n\nError: {e}")
-    st.stop() 
+    st.error(f"❌ Failed to load dataset from the given file path.\n\nError: {e}")
+    st.stop()
     
 # -----------------------------
 # GA Parameter Inputs (Three Trials)
