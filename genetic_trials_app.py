@@ -14,19 +14,19 @@ Each trial will produce a unique optimized schedule.
 """)
 
 # -----------------------------
-# Upload CSV File
+# Load Dataset from GitHub
 # -----------------------------
-st.sidebar.header("📁 Upload Dataset")
-uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=["csv"])
+# 👉 Replace this link with your own GitHub raw CSV link
+github_csv_url = "https://raw.github.com/s22a0023-maker/Assigment_CE/blob/main/program_ratings.csv"
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    st.success("✅ Dataset uploaded successfully!")
+try:
+    df = pd.read_csv(github_csv_url)
+    st.success("✅ Dataset loaded successfully from GitHub!")
     st.dataframe(df.head(), use_container_width=True)
-else:
-    st.warning("⚠️ Please upload a CSV file to begin.")
-    st.stop()
-
+except Exception as e:
+    st.error(f"❌ Failed to load dataset from GitHub. Please check the URL.\n\nError: {e}")
+    st.stop() 
+    
 # -----------------------------
 # GA Parameter Inputs (Three Trials)
 # -----------------------------
