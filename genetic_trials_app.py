@@ -17,7 +17,7 @@ Each trial will produce a unique optimized schedule.
 # Load Dataset from GitHub
 # -----------------------------
 # 👉 Replace this link with your own GitHub raw CSV link
-github_csv_url = "https://raw.github.com/s22a0023-maker/Assigment_CE/blob/main/program_ratings.csv"
+github_csv_url = "https://github.com/s22a0023-maker/Assigment_CE/blob/main/program_ratings.csv"
 
 try:
     df = pd.read_csv(github_csv_url)
