@@ -53,7 +53,7 @@ mut_r3 = st.sidebar.slider("MUT_R (Trial 3)", 0.01, 0.05, 0.04, 0.01)
 def run_genetic_algorithm(df, co_r, mut_r):
     """
     Simulate GA schedule optimization using the uploaded dataset.
-    Always produces schedule from Hour 1 to Hour 23.
+    Always produces schedule from Hour 6 to Hour 23.
     """
 
     # --- Detect program name column ---
@@ -74,8 +74,8 @@ def run_genetic_algorithm(df, co_r, mut_r):
         .tolist()
     )
 
-    # --- Define fixed time slots (Hour 1 to Hour 23) ---
-    time_slots = [f"Hour {i}" for i in range(1, 24)]
+    # --- Define fixed time slots (Hour 6 to Hour 23) ---
+    time_slots = [f"Hour {i}" for i in range(6, 24)]
 
     # --- GA Simulation Random Shuffle ---
     random.seed(int(co_r * 1000 + mut_r * 10000))
