@@ -53,7 +53,7 @@ mut_r3 = st.sidebar.slider("MUT_R (Trial 3)", 0.01, 0.05, 0.04, 0.01)
 def run_genetic_algorithm(df, co_r, mut_r):
     """
     Simulate GA schedule optimization using the uploaded dataset.
-    Detects program names and uses dataset's time slot headers (e.g., Hour 6, Hour 7...).
+    Always produces schedule from Hour 1 to Hour 23.
     """
 
     # --- Detect program name column ---
@@ -74,21 +74,28 @@ def run_genetic_algorithm(df, co_r, mut_r):
         .tolist()
     )
 
-    # --- Detect time slot columns ---
-    time_slots = [col for col in df.columns if "hour" in col.lower() or "time" in col.lower()]
-    if not time_slots:
-        time_slots = [f"Hour {i+1}" for i in range(min(6, len(programs)))]
+    # --- Define fixed time slots (Hour 1 to Hour 23) ---
+    time_slots = [f"Hour {i}" for i in range(1, 24)]
 
-    # --- Simulate GA scheduling ---
+    # --- GA Simulation Random Shuffle ---
     random.seed(int(co_r * 1000 + mut_r * 10000))
     random.shuffle(programs)
 
+    # If fewer programs than time slots → repeat programs
+    if len(programs) < len(time_slots):
+        repeat_times = (len(time_slots) // len(programs)) + 1
+        programs = (programs * repeat_times)[:len(time_slots)]
+    else:
+        programs = programs[:len(time_slots)]
+
+    # Create schedule DataFrame
     schedule = pd.DataFrame({
-        "Time Slot": time_slots[:len(programs)],
-        "Program": programs[:len(time_slots)]
+        "Time Slot": time_slots,
+        "Program": programs
     })
 
     return schedule
+
 
 # -----------------------------
 # Run Button – All Three Trials
